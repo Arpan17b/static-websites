@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>India Weather</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #14141d;
+        }
+
+        @keyframes float1 {
+            0% {
+                transform: translate(0, 0) rotate(0deg) scale(1.0);
+            }
+
+            25% {
+                transform: translate(-20px, 15px) rotate(5deg) scale(1.05);
+            }
+
+            50% {
+                transform: translate(0, -20px) rotate(0deg) scale(1.0);
+            }
+
+            75% {
+                transform: translate(15px, 20px) rotate(-5deg) scale(0.95);
+            }
+
+            100% {
+                transform: translate(0, 0) rotate(0deg) scale(1.0);
+            }
+        }
+
+        @keyframes float2 {
+            0% {
+                transform: translate(0, 0) rotate(0deg) scale(1.0);
+            }
+
+            25% {
+                transform: translate(25px, -10px) rotate(-8deg) scale(0.98);
+            }
+
+            50% {
+                transform: translate(0, 25px) rotate(0deg) scale(1.02);
+            }
+
+            75% {
+                transform: translate(-10px, -20px) rotate(6deg) scale(1.0);
+            }
+
+            100% {
+                transform: translate(0, 0) rotate(0deg) scale(1.0);
+            }
+        }
+
+        @keyframes float3 {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            50% {
+                transform: translate(0, 15px) rotate(5deg);
+            }
+
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                text-shadow: 0 0 10px rgba(255, 255, 255, 0.4), 0 0 20px rgba(255, 255, 255, 0.3);
+            }
+
+            50% {
+                text-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.5);
+            }
+        }
+
+        .animate-float1 {
+            animation: float1 15s ease-in-out infinite;
+        }
+
+        .animate-float2 {
+            animation: float2 18s ease-in-out infinite;
+        }
+
+        .animate-float3 {
+            animation: float3 12s ease-in-out infinite;
+        }
+
+        .animate-pulse-glow {
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        .icon-glow svg {
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7));
+        }
+
+        .frosted-glass {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+    </style>
+</head>
+
+<body class="bg-black">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { createRoot } = ReactDOM;
+
+        // A simple object to hold SVG paths for icons
+        const Icons = {
+            MapPin: (props) => (
+                <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                    <circle cx="12" cy="10" r="3" />
+                </svg>
+            ),
+            Thermometer: (props) => (
+                <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z" />
+                </svg>
+            ),
+            Droplets: (props) => (
+                <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M7 16l-3.37-3.69a5.54 5.54 0 0 1-.37-7.56 5.54 5.54 0 0 1 7.56-.37L12 7l4.18-4.18a5.54 5.54 0 0 1 7.56.37 5.54 5.54 0 0 1-.37 7.56L17 16" />
+                </svg>
+            ),
+            Wind: (props) => (
+                <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.7 7.7a2.5 2.5 0 1 1 0-5c-1.3 0-2.2 1.3-3.1 2.3s-1.4 2.6-1.5 4.5l-2.4 2.4l-2.4-2.4c-.9 1.9-2.7 3.2-4.5 3.5c-1.9 0-3.6-1.4-4.5-3.5L4 12c-1.9-1.9-3.2-3.6-3.5-4.5c-1.9 0-3.6 1.4-4.5 3.5l-2.4 2.4l-2.4-2.4c-.9 1.9-2.7 3.2-4.5 3.5c-1.9 0-3.6-1.4-4.5-3.5" />
+                    <path d="M2.5 12h17.1c-1.4-3.1-3.2-5.4-5.2-6.8" />
+                </svg>
+            ),
+            Eye: (props) => (
+                <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                    <circle cx="12" cy="12" r="3" />
+                </svg>
+            ),
+            Sun: (props) => (
+                <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v2" />
+                    <path d="M12 20v2" />
+                    <path d="M4.93 4.93l1.41 1.41" />
+                    <path d="M17.66 17.66l1.41 1.41" />
+                    <path d="M2 12h2" />
+                    <path d="M20 12h2" />
+                    <path d="M4.93 19.07l1.41-1.41" />
+                    <path d="M17.66 6.34l1.41-1.41" />
+                </svg>
+            ),
+            Cloud: (props) => (
+                <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.5 19H17a5 5 0 0 0 0-10C15.9 5.8 13.5 4 10.5 4A7 7 0 0 0 3 11.5a7.5 7.5 0 0 0 4.5 5.5H17.5a4.5 4.5 0 0 0 0-9" />
+                </svg>
+            ),
+            CloudLightning: (props) => (
+                <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" />
+                    <path d="M13 14v-6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v6" />
+                    <path d="M22 10l-6 8h2l-4 6-4-6h2l-6-8h4" />
+                </svg>
+            ),
+            CloudSnow: (props) => (
+                <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.5 19H17a5 5 0 0 0 0-10C15.9 5.8 13.5 4 10.5 4A7 7 0 0 0 3 11.5a7.5 7.5 0 0 0 4.5 5.5H17.5a4.5 4.5 0 0 0 0-9" />
+                    <path d="M8 18h.01" />
+                    <path d="M12 18h.01" />
+                    <path d="M16 18h.01" />
+                </svg>
+            ),
+            CloudDrizzle: (props) => (
+                <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.5 19H17a5 5 0 0 0 0-10C15.9 5.8 13.5 4 10.5 4A7 7 0 0 0 3 11.5a7.5 7.5 0 0 0 4.5 5.5H17.5a4.5 4.5 0 0 0 0-9" />
+                    <path d="M8 20l-1.5-3" />
+                    <path d="M12 20l-1.5-3" />
+                    <path d="M16 20l-1.5-3" />
+                </svg>
+            ),
+            CloudRain: (props) => (
+                <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.5 19H17a5 5 0 0 0 0-10C15.9 5.8 13.5 4 10.5 4A7 7 0 0 0 3 11.5a7.5 7.5 0 0 0 4.5 5.5H17.5a4.5 4.5 0 0 0 0-9" />
+                    <path d="M16 14v4a2 2 0 0 0 2 2h2v-4" />
+                    <path d="M10 14v4a2 2 0 0 0 2 2h2v-4" />
+                </svg>
+            ),
+            CloudFog: (props) => (
+                <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.5 19H17a5 5 0 0 0 0-10C15.9 5.8 13.5 4 10.5 4A7 7 0 0 0 3 11.5a7.5 7.5 0 0 0 4.5 5.5H17.5a4.5 4.5 0 0 0 0-9" />
+                    <path d="M7 16h10" />
+                    <path d="M7 12h10" />
+                </svg>
+            ),
+            AlertCircle: (props) => (
+                <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+            )
+        };
+
+        // The main App component containing all the logic and UI
+        const App = () => {
+            const [city, setCity] = useState('');
+            const [weatherData, setWeatherData] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
+
+            // OpenWeatherMap API key
+            const owmKey = '73c04e325b5ca38b7dd72bfac82c325c';
+
+            useEffect(() => {
+                const lastCity = localStorage.getItem('lastCity');
+                if (lastCity) {
+                    setCity(lastCity);
+                    fetchWeather(lastCity);
+                }
+            }, []);
+
+            useEffect(() => {
+                if (city) {
+                    localStorage.setItem('lastCity', city);
+                }
+            }, [city]);
+
+            const fetchWeather = async (cityName) => {
+                if (!cityName) {
+                    setError('Please enter a city name.');
+                    return;
+                }
+                setLoading(true);
+                setError('');
+                setWeatherData(null);
+
+                const query = `${cityName},IN`;
+                const url = `https://api.openweathermap.org/data/2.5/weather?q=${query}&appid=${owmKey}&units=metric`;
+
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            throw new Error('City not found. Please try a valid city in India.');
+                        } else {
+                            throw new Error('Failed to fetch weather data. Please try again later.');
+                        }
+                    }
+                    const data = await response.json();
+                    setWeatherData(data);
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                fetchWeather(city);
+            };
+
+            const getWeatherIcon = (weatherId) => {
+                switch (true) {
+                    case weatherId >= 200 && weatherId < 300:
+                        return <Icons.CloudLightning className="w-16 h-16" />;
+                    case weatherId >= 300 && weatherId < 400:
+                        return <Icons.CloudDrizzle className="w-16 h-16" />;
+                    case weatherId >= 500 && weatherId < 600:
+                        return <Icons.CloudRain className="w-16 h-16" />;
+                    case weatherId >= 600 && weatherId < 700:
+                        return <Icons.CloudSnow className="w-16 h-16" />;
+                    case weatherId >= 700 && weatherId < 800:
+                        return <Icons.CloudFog className="w-16 h-16" />;
+                    case weatherId === 800:
+                        return <Icons.Sun className="w-16 h-16" />;
+                    case weatherId > 800:
+                        return <Icons.Cloud className="w-16 h-16" />;
+                    default:
+                        return <Icons.Cloud className="w-16 h-16" />;
+                }
+            };
+
+            const DetailCard = ({ icon, title, value, unit, iconGradient }) => (
+                <div
+                    className="p-4 rounded-xl frosted-glass transition-all duration-300 transform hover:scale-105 relative overflow-hidden group"
+                >
+                    <div
+                        className={`w-12 h-12 rounded-full mb-2 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg ${iconGradient}`}
+                    >
+                        {icon}
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-white text-sm font-semibold">{title}</span>
+                        <span className="text-lg font-bold text-white leading-tight">
+                            {value}
+                            <span className="text-sm font-normal">{unit}</span>
+                        </span>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="relative min-h-screen bg-black overflow-hidden flex flex-col items-center justify-center font-sans">
+                    {/* Animated background blur elements */}
+                    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/50 rounded-full mix-blend-screen opacity-70 filter blur-3xl animate-float1"></div>
+                    <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-cyan-400/50 rounded-full mix-blend-screen opacity-70 filter blur-3xl animate-float2"></div>
+                    <div className="absolute top-1/2 left-1/2 w-72 h-72 bg-rose-500/50 rounded-full mix-blend-screen opacity-70 filter blur-3xl animate-float3"></div>
+
+                    {/* Main content container with backdrop blur */}
+                    <div className="relative z-10 w-full max-w-2xl px-4 py-8">
+
+                        {/* Title */}
+                        <h1 className="text-center mb-10 text-5xl md:text-6xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-300 via-cyan-300 to-purple-400 drop-shadow-lg [text-shadow:0_0_20px_#4b4b4b]">
+                            India Weather
+                        </h1>
+
+                        {/* Search card */}
+                        <div className="w-full frosted-glass rounded-2xl p-6 shadow-xl mb-8">
+                            <form onSubmit={handleSubmit} className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
+                                <input
+                                    type="text"
+                                    value={city}
+                                    onChange={(e) => setCity(e.target.value)}
+                                    placeholder="Enter a city in India..."
+                                    className="flex-1 w-full bg-white/10 text-white placeholder-gray-300 rounded-full py-3 px-6 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-300 border border-white/20 shadow-inner"
+                                />
+                                <button
+                                    type="submit"
+                                    className="w-full md:w-auto px-8 py-3 rounded-full font-semibold text-white bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                                >
+                                    Search
+                                </button>
+                            </form>
+                        </div>
+
+                        {/* Loading and error states */}
+                        {loading && (
+                            <div className="text-center text-white text-lg mt-8">
+                                <div className="animate-spin h-8 w-8 rounded-full border-2 border-white border-t-transparent mx-auto mb-4"></div>
+                                Loading...
+                            </div>
+                        )}
+
+                        {error && (
+                            <div className="text-center text-red-400 text-lg mt-8 flex items-center justify-center">
+                                <Icons.AlertCircle className="mr-2 h-5 w-5" /> {error}
+                            </div>
+                        )}
+
+                        {/* Weather data display card */}
+                        {weatherData && (
+                            <div className="w-full frosted-glass rounded-2xl p-8 shadow-xl transition-all duration-500 animate-fadeIn">
+                                <div className="flex flex-col items-center">
+                                    {/* City name */}
+                                    <h2 className="text-3xl md:text-4xl text-white font-bold flex items-center mb-4">
+                                        <Icons.MapPin className="h-6 w-6 mr-2 text-red-400" />
+                                        {weatherData.name}
+                                    </h2>
+
+                                    {/* Weather icon and condition */}
+                                    <div className="text-white text-center mb-6">
+                                        <div className="text-7xl icon-glow">
+                                            {getWeatherIcon(weatherData.weather[0].id)}
+                                        </div>
+                                        <p className="text-xl font-medium mt-2">
+                                            {weatherData.weather[0].description.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                                        </p>
+                                    </div>
+
+                                    {/* Temperature */}
+                                    <p className="text-7xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-pink-400 via-rose-500 to-red-600 drop-shadow-md animate-pulse-glow">
+                                        {Math.round(weatherData.main.temp)}°C
+                                    </p>
+
+                                    {/* Weather details grid */}
+                                    <div className="mt-8 grid grid-cols-2 gap-4 w-full">
+                                        {/* Feels like */}
+                                        <DetailCard
+                                            icon={<Icons.Thermometer className="w-6 h-6 text-white" />}
+                                            title="Feels Like"
+                                            value={Math.round(weatherData.main.feels_like)}
+                                            unit="°C"
+                                            iconGradient="bg-gradient-to-br from-orange-500 to-red-500"
+                                        />
+                                        {/* Humidity */}
+                                        <DetailCard
+                                            icon={<Icons.Droplets className="w-6 h-6 text-white" />}
+                                            title="Humidity"
+                                            value={weatherData.main.humidity}
+                                            unit="%"
+                                            iconGradient="bg-gradient-to-br from-blue-500 to-cyan-500"
+                                        />
+                                        {/* Wind Speed */}
+                                        <DetailCard
+                                            icon={<Icons.Wind className="w-6 h-6 text-white" />}
+                                            title="Wind Speed"
+                                            value={weatherData.wind.speed}
+                                            unit=" km/h"
+                                            iconGradient="bg-gradient-to-br from-green-400 to-teal-500"
+                                        />
+                                        {/* Visibility */}
+                                        <DetailCard
+                                            icon={<Icons.Eye className="w-6 h-6 text-white" />}
+                                            title="Visibility"
+                                            value={weatherData.visibility / 1000}
+                                            unit=" km"
+                                            iconGradient="bg-gradient-to-br from-purple-500 to-violet-600"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // Root rendering
+        const container = document.getElementById('root');
+        if (container) {
+            const root = createRoot(container);
+            root.render(<App />);
+        }
+    </script>
+</body>
+
+</html>
