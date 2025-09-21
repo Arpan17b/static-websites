@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* General Styling */
+        :root {
+            --board-size: 300px;
+            --cell-size: calc(var(--board-size) / 3);
+            --bg-color: #1a202c;
+            --cell-bg-color: #2d3748;
+            --cell-hover-bg: #4a5568;
+            --text-color: #e2e8f0;
+            --x-color: #38b2ac;
+            --o-color: #f6ad55;
+            --border-color: #4a5568;
+            --button-bg: #38b2ac;
+            --button-hover-bg: #319795;
+            --gemini-button-bg: #805AD5;
+            --gemini-button-hover-bg: #6B46C1;
+            --font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        /* Mode Selection Styling */
+        #mode-selection {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .mode-button {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-color);
+            background-color: var(--cell-bg-color);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .mode-button:hover {
+            background-color: var(--cell-hover-bg);
+        }
+
+        .mode-button.active {
+            border-color: var(--button-bg);
+        }
+
+        /* Game Board Styling */
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(3, var(--cell-size));
+            grid-template-rows: repeat(3, var(--cell-size));
+            gap: 10px;
+        }
+
+        .cell {
+            width: var(--cell-size);
+            height: var(--cell-size);
+            background-color: var(--cell-bg-color);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .cell:hover {
+            background-color: var(--cell-hover-bg);
+        }
+
+        .cell.x {
+            color: var(--x-color);
+        }
+
+        .cell.o {
+            color: var(--o-color);
+        }
+
+        /* Status and Button Styling */
+        #status-message {
+            font-size: 1.25rem;
+            font-weight: 500;
+            min-height: 1.5em;
+            /* Prevents layout shift */
+        }
+
+        #button-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        #reset-button,
+        #commentary-button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 500;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        #reset-button {
+            background-color: var(--button-bg);
+        }
+
+        #reset-button:hover {
+            background-color: var(--button-hover-bg);
+        }
+
+        #commentary-button {
+            background-color: var(--gemini-button-bg);
+        }
+
+        #commentary-button:hover {
+            background-color: var(--gemini-button-hover-bg);
+        }
+
+        #commentary-button:disabled {
+            background-color: #4a5568;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Gemini Commentary Styling */
+        #commentary-container {
+            margin-top: -5px;
+            min-height: 40px;
+            width: 100%;
+            max-width: calc(var(--board-size) + 10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--cell-bg-color);
+            border-radius: 8px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        #commentary-text {
+            margin: 0;
+            font-style: italic;
+        }
+
+        #spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid var(--text-color);
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            :root {
+                --board-size: 80vw;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .cell {
+                font-size: 2.5rem;
+            }
+
+            #button-container {
+                flex-direction: column;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main>
+        <h1>Tic Tac Toe</h1>
+        <div id="mode-selection">
+            <button class="mode-button" id="pvc">Player vs Computer</button>
+            <button class="mode-button" id="pvp">Player vs Player</button>
+        </div>
+        <div id="game-board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+        <p id="status-message">Player X's turn</p>
+        <div id="button-container">
+            <button id="reset-button">Reset Game</button>
+            <button id="commentary-button">✨ Get AI Commentary</button>
+        </div>
+        <div id="commentary-container">
+            <div id="spinner" class="hidden"></div>
+            <p id="commentary-text">Click the ✨ button for some commentary!</p>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const cells = document.querySelectorAll('.cell');
+            const statusMessage = document.getElementById('status-message');
+            const resetButton = document.getElementById('reset-button');
+            const pvcButton = document.getElementById('pvc');
+            const pvpButton = document.getElementById('pvp');
+            const commentaryButton = document.getElementById('commentary-button');
+            const commentaryText = document.getElementById('commentary-text');
+            const spinner = document.getElementById('spinner');
+
+            // --- Game State ---
+            let currentPlayer = 'X';
+            let boardState = ['', '', '', '', '', '', '', '', ''];
+            let isGameActive = true;
+            let gameMode = 'pvc'; // 'pvc' for Player vs Computer, 'pvp' for Player vs Player
+
+            // --- Winning Combinations ---
+            const winningConditions = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+                [0, 4, 8], [2, 4, 6]             // diagonals
+            ];
+
+            // --- Gemini API ---
+            const API_KEY = ""; // Leave as is
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
+
+            const systemPrompt = "You are a witty and slightly dramatic Tic Tac Toe commentator. Your personality is a mix of a classic sports announcer and a sarcastic friend. Provide a short, funny, one-sentence comment on the current state of the game. Keep your comments under 15 words. Don't mention the board layout in your response. Just give the commentary.";
+
+            /**
+             * Formats the current board state into a string for the AI prompt.
+             * @returns {string} - A string representation of the board.
+             */
+            const formatBoardForAI = () => {
+                let boardString = 'The current board is (empty means " "): \n';
+                for (let i = 0; i < 3; i++) {
+                    const row = boardState.slice(i * 3, i * 3 + 3);
+                    boardString += `[${row[0] || ' '}] [${row[1] || ' '}] [${row[2] || ' '}]\n`;
+                }
+                boardString += `\nIt is ${currentPlayer}'s turn to move. What is your comment?`;
+                return boardString;
+            };
+
+            /**
+             * Fetches commentary from the Gemini API.
+             */
+            const getAICommentary = async () => {
+                commentaryButton.disabled = true;
+                commentaryText.classList.add('hidden');
+                spinner.classList.remove('hidden');
+
+                const userQuery = formatBoardForAI();
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    systemInstruction: {
+                        parts: [{ text: systemPrompt }]
+                    },
+                };
+
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (text) {
+                        commentaryText.textContent = text.trim();
+                    } else {
+                        commentaryText.textContent = "The AI is speechless...";
+                    }
+                } catch (error) {
+                    console.error('Error fetching AI commentary:', error);
+                    commentaryText.textContent = 'Could not get commentary. Try again.';
+                } finally {
+                    commentaryButton.disabled = false;
+                    spinner.classList.add('hidden');
+                    commentaryText.classList.remove('hidden');
+                }
+            };
+
+            // --- Core Game Functions ---
+
+            /**
+             * Updates the status message based on the current game state.
+             */
+            const updateStatusMessage = () => {
+                if (!isGameActive) return;
+                if (gameMode === 'pvc') {
+                    statusMessage.textContent = currentPlayer === 'X' ? "Your turn (X)" : "Computer's turn (O)";
+                } else {
+                    statusMessage.textContent = `Player ${currentPlayer}'s turn`;
+                }
+            };
+
+            /**
+             * Sets the game mode and resets the board.
+             * @param {string} mode - The selected game mode ('pvc' or 'pvp').
+             */
+            const selectMode = (mode) => {
+                gameMode = mode;
+                pvcButton.classList.toggle('active', mode === 'pvc');
+                pvpButton.classList.toggle('active', mode === 'pvp');
+                resetGame();
+            };
+
+            /**
+             * Handles a click on a cell.
+             * @param {MouseEvent} event - The click event.
+             */
+            const handleCellClick = (event) => {
+                const clickedCell = event.target;
+                const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
+
+                if (boardState[clickedCellIndex] !== '' || !isGameActive || (gameMode === 'pvc' && currentPlayer === 'O')) {
+                    return;
+                }
+
+                updateCell(clickedCell, clickedCellIndex);
+                checkResult();
+
+                if (gameMode === 'pvc' && isGameActive) {
+                    setTimeout(computerMove, 500);
+                }
+            };
+
+            const checkWin = (player, state = boardState) => {
+                return winningConditions.some(condition => {
+                    return condition.every(index => state[index] === player);
+                });
+            };
+
+            const findBestMove = () => {
+                // Check for AI winning move
+                for (let i = 0; i < 9; i++) {
+                    if (boardState[i] === '') {
+                        boardState[i] = 'O';
+                        if (checkWin('O')) { boardState[i] = ''; return i; }
+                        boardState[i] = '';
+                    }
+                }
+                // Check for player blocking move
+                for (let i = 0; i < 9; i++) {
+                    if (boardState[i] === '') {
+                        boardState[i] = 'X';
+                        if (checkWin('X')) { boardState[i] = ''; return i; }
+                        boardState[i] = '';
+                    }
+                }
+                // Strategy: center, corners, sides
+                const strategicMoves = [4, 0, 2, 6, 8, 1, 3, 5, 7];
+                for (const move of strategicMoves) {
+                    if (boardState[move] === '') return move;
+                }
+                return -1; // Should not happen
+            };
+
+            const computerMove = () => {
+                if (!isGameActive) return;
+                const moveIndex = findBestMove();
+                if (moveIndex !== -1) {
+                    const cellToUpdate = document.querySelector(`.cell[data-index='${moveIndex}']`);
+                    updateCell(cellToUpdate, moveIndex);
+                    checkResult();
+                }
+            };
+
+            const updateCell = (cell, index) => {
+                boardState[index] = currentPlayer;
+                cell.textContent = currentPlayer;
+                cell.classList.add(currentPlayer.toLowerCase());
+            };
+
+            const changePlayer = () => {
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                updateStatusMessage();
+            };
+
+            const checkResult = () => {
+                let roundWon = checkWin(currentPlayer);
+
+                if (roundWon) {
+                    if (gameMode === 'pvc') {
+                        statusMessage.textContent = currentPlayer === 'X' ? 'You have won!' : 'Computer has won!';
+                    } else {
+                        statusMessage.textContent = `Player ${currentPlayer} has won!`;
+                    }
+                    isGameActive = false;
+                    commentaryButton.disabled = true;
+                    return;
+                }
+
+                if (!boardState.includes('')) {
+                    statusMessage.textContent = `It's a draw!`;
+                    isGameActive = false;
+                    commentaryButton.disabled = true;
+                    return;
+                }
+
+                changePlayer();
+            };
+
+            const resetGame = () => {
+                currentPlayer = 'X';
+                boardState = ['', '', '', '', '', '', '', '', ''];
+                isGameActive = true;
+                updateStatusMessage();
+                commentaryButton.disabled = false;
+                commentaryText.textContent = "Click the ✨ button for some commentary!";
+
+
+                cells.forEach(cell => {
+                    cell.textContent = '';
+                    cell.classList.remove('x', 'o');
+                });
+            };
+
+            // --- Event Listeners ---
+            cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+            resetButton.addEventListener('click', resetGame);
+            pvcButton.addEventListener('click', () => selectMode('pvc'));
+            pvpButton.addEventListener('click', () => selectMode('pvp'));
+            commentaryButton.addEventListener('click', getAICommentary);
+
+            // Set the initial game mode
+            selectMode('pvc');
+        });
+    </script>
+
+</body>
+
+</html>
